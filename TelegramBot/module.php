@@ -186,7 +186,7 @@ class TelegramBot extends WebHookModule
                 $this->SendDebug('EXECUTED', sprintf('Action %s was executed by %s %s (%d)', $data['message']['text'], $data['message']['from']['first_name'], $data['message']['from']['last_name'], $data['message']['from']['id']), 0);
 
                 //Notify user about our success
-                $this->SendMessageEx($this->Translate('Action executed!'), strval($data['message']['from']['id']));
+               // $this->SendMessageEx($this->Translate('Action executed!'), strval($data['message']['from']['id']));
                 $found = true;
                 break;
             }
@@ -195,7 +195,7 @@ class TelegramBot extends WebHookModule
         //Notify user that we did not find a suitable action
         if (!$found) {
             $this->SendDebug('UNKNOWN', sprintf('Unknown Action %s was requested by %s %s (%d)', $data['message']['text'], $data['message']['from']['first_name'], $data['message']['from']['last_name'], $data['message']['from']['id']), 0);
-            $this->SendMessageEx($this->Translate('Unknown action!'), strval($data['message']['from']['id']));
+            //$this->SendMessageEx($this->Translate('Unknown action!'), strval($data['message']['from']['id']));
         }
     }
 
