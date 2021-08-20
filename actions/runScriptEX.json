@@ -1,0 +1,23 @@
+{
+    "id": "{06DCE4F7-CBE5-50F9-EC2C-549AD82A159D}",
+    "caption": "Run Automation",
+    "form": [],
+    "action": [
+        "IPS_RunScriptEx($_IPS['TARGET'], $_IPS);"
+    ],
+    "priority": 20,
+    "restrictions": {
+        "objectType": [ 3 ],
+        "includeEnvironments": [ "FlowScript" ]
+    },
+    "locale": {
+        "de": {
+            "Run Automation": "Führe Automation aus",
+            "Wait until the automation is fully executed": "Warte bis die Automation vollständig ausgeführt wurde",
+            "Run the target automation": "Führe die Zielautomation aus"
+        }
+    },
+    "category": "other",
+    "description": "Run the target automation",
+    "readable": "echo 'IPS_RunScript(' . $_IPS['TARGET'] . ');';"
+}
