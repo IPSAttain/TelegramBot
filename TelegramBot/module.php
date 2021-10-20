@@ -156,7 +156,7 @@ class TelegramBot extends WebHookModule
         }
 
         // Store all Input into an Variable
-        $this->SetValueHTML($data['message']['from']['id'],$data['message']['text'],$data['message']['from']['first_name'],$data['message']['from']['last_name']);
+        $this->SetValueHTML($data['message']['from']['id'],$data['message']['text'],$data['message']['from']['first_name'],$data['message']['from']['last_name'], $data['message']['from']['username']);
         
         //Notify user that he is not allowed to do that
         if (!$found) {
@@ -180,7 +180,7 @@ class TelegramBot extends WebHookModule
 
                 //Send debug that we will execute
                 $this->SendDebug('EXECUTING', sprintf('Action %s is executing by %s %s (%d)', $data['message']['text'], $data['message']['from']['first_name'], $data['message']['from']['last_name'], $data['message']['from']['id']), 0);
-                IPS_RunAction($actionPayload['actionID'], array_merge(['TARGET' => $actionPayload['targetID'], 'INSTANCE' => $this->InstanceID, 'BOTMESSAGE' => $data['message']['text'], 'USERID' => $data['message']['from']['id'], 'FIRSTNAME' => $data['message']['from']['first_name'], 'LASTNAME' => $data['message']['from']['last_name']], $actionPayload['parameters']));
+                IPS_RunAction($actionPayload['actionID'], array_merge(['TARGET' => $actionPayload['targetID'], 'INSTANCE' => $this->InstanceID, 'BOTMESSAGE' => $data['message']['text'], 'USERID' => $data['message']['from']['id'], 'FIRSTNAME' => $data['message']['from']['first_name'], 'LASTNAME' => $data['message']['from']['last_name'], 'USERNAME' => $data['message']['from']['username']], $actionPayload['parameters']));
 
                 //Send debug after we executed
                 $this->SendDebug('EXECUTED', sprintf('Action %s was executed by %s %s (%d)', $data['message']['text'], $data['message']['from']['first_name'], $data['message']['from']['last_name'], $data['message']['from']['id']), 0);
@@ -210,7 +210,7 @@ class TelegramBot extends WebHookModule
         return $NameOrChatID;
     }
 
-    private function SetValueHTML($userid, $message, $first_name, $last_name){
+    private function SetValueHTML($userid, $message, $first_name, $last_name, $user_name){
         $amount = 10;
         $header ='<body bgcolor="#a6caf0"><style type="text/css">table.liste { width: 100%; border-collapse: true;} table.liste td { border: 1px solid #444455; } table.liste th { border: 1px solid #444455; }</style>';
         $header.='<table border = "0" frame="box" class="liste">';
@@ -220,6 +220,7 @@ class TelegramBot extends WebHookModule
         $header.='<th>' . $this->Translate('UserID') . '</th>';
         $header.='<th>' . $this->Translate('First Name') . '</th>';
         $header.='<th>' . $this->Translate('Last Name') . '</th>';
+        $header.='<th>' . $this->Translate('User Name') . '</th>';
         $header.='<th>' . $this->Translate('Message') . '</th>';
         $header.='</tr>';
     
@@ -228,6 +229,7 @@ class TelegramBot extends WebHookModule
         $data.='<td>'.$userid.'</td>';
         $data.='<td>'.$first_name.'</td>';
         $data.='<td>'.$last_name.'</td>';
+        $data.='<td>'.$user_name.'</td>';
         $data.='<td>'.$message.'</td>';
        
         $buffer = explode("</tr>",$this->ReadAttributeString("Buffer"),$amount);
