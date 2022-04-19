@@ -22,6 +22,9 @@ class TelegramBot extends WebHookModule
 
         $this->RegisterPropertyString('AllowList', '[]');
         $this->RegisterPropertyString('ActionList', '[]');
+
+        $this->RegisterAttributeString("Buffer", "");
+        $this->RegisterVariableString("HTMLTable", "Telegram Events","~HTMLBox",10);
     }
 
     public function Destroy()
@@ -79,16 +82,16 @@ class TelegramBot extends WebHookModule
             $NameOrChatID = $this->NameToUserID($NameOrChatID);
 
             // Check formatting options of the message
-            //if ($Text != strip_tags($Text)) {
+            if ($Text != strip_tags($Text)) {
                 $parse_mode = 'HTML';
-            //} else {
-            //    $parse_mode = '';
-            //}
+            } else {
+                $parse_mode = '';
+            }
 
             // Send message
             $result = Longman\TelegramBot\Request::sendMessage([
-                'chat_id'    => $NameOrChatID,
-                'text'       => $Text,
+                'chat_id' => $NameOrChatID,
+                'text'    => $Text,
                 'parse_mode' => $parse_mode,
             ]);
 
@@ -159,29 +162,38 @@ class TelegramBot extends WebHookModule
             }
         }
 
+        // Store all Input into an Variable
+        $this->SetValueHTML($data['message']['from']['id'],$data['message']['text'],$data['message']['from']['first_name'],$data['message']['from']['last_name'], $data['message']['from']['username']);
+        
         //Notify user that he is not allowed to do that
         if (!$found) {
             $this->SendDebug('SECURITY', sprintf('Access denied to %s %s (%d)', $data['message']['from']['first_name'], $data['message']['from']['last_name'], $data['message']['from']['id']), 0);
-            $this->SendMessageEx($this->Translate('Access denied!'), strval($data['message']['from']['id']));
+            if ($data['message']['from']['language_code'] == 'de') {
+                $this->SendMessageEx($this->Translate('Access denied!'), strval($data['message']['from']['id']));
+            }
+            else {
+                $this->SendMessageEx('Access denied!', strval($data['message']['from']['id']));
+            }
             return;
         }
 
         //Check if we know the action and can execute it
         $actions = json_decode($this->ReadPropertyString('ActionList'), true);
         $found = false;
+        $msgarray = preg_split('/ /', $data['message']['text'], 4);
         foreach ($actions as $action) {
-            if ($action['Command'] == $data['message']['text']) {
+            if ($action['Command'] == strtolower($msgarray[0])) {
                 $actionPayload = json_decode($action['Action'], true);
 
                 //Send debug that we will execute
                 $this->SendDebug('EXECUTING', sprintf('Action %s is executing by %s %s (%d)', $data['message']['text'], $data['message']['from']['first_name'], $data['message']['from']['last_name'], $data['message']['from']['id']), 0);
-                IPS_RunAction($actionPayload['actionID'], array_merge(['TARGET' => $actionPayload['targetID']], $actionPayload['parameters']));
+                IPS_RunAction($actionPayload['actionID'], array_merge(['TARGET' => $actionPayload['targetID'], 'INSTANCE' => $this->InstanceID, 'BOTMESSAGE' => $data['message']['text'], 'USERID' => $data['message']['from']['id'], 'FIRSTNAME' => $data['message']['from']['first_name'], 'LASTNAME' => $data['message']['from']['last_name']], $actionPayload['parameters']));
 
                 //Send debug after we executed
                 $this->SendDebug('EXECUTED', sprintf('Action %s was executed by %s %s (%d)', $data['message']['text'], $data['message']['from']['first_name'], $data['message']['from']['last_name'], $data['message']['from']['id']), 0);
 
                 //Notify user about our success
-                $this->SendMessageEx($this->Translate('Action executed!'), strval($data['message']['from']['id']));
+               // $this->SendMessageEx($this->Translate('Action executed!'), strval($data['message']['from']['id']));
                 $found = true;
                 break;
             }
@@ -190,7 +202,7 @@ class TelegramBot extends WebHookModule
         //Notify user that we did not find a suitable action
         if (!$found) {
             $this->SendDebug('UNKNOWN', sprintf('Unknown Action %s was requested by %s %s (%d)', $data['message']['text'], $data['message']['from']['first_name'], $data['message']['from']['last_name'], $data['message']['from']['id']), 0);
-            $this->SendMessageEx($this->Translate('Unknown action!'), strval($data['message']['from']['id']));
+            //$this->SendMessageEx($this->Translate('Unknown action!'), strval($data['message']['from']['id']));
         }
     }
 
@@ -203,5 +215,36 @@ class TelegramBot extends WebHookModule
             }
         }
         return $NameOrChatID;
+    }
+
+    private function SetValueHTML($userid, $message, $first_name, $last_name, $user_name){
+        $amount = 10;
+        $header ='<body bgcolor="#a6caf0"><style type="text/css">table.liste { width: 100%; border-collapse: true;} table.liste td { border: 1px solid #444455; } table.liste th { border: 1px solid #444455; }</style>';
+        $header.='<table border = "0" frame="box" class="liste">';
+        $header.='<tr>';
+        $header.='<th>' . $this->Translate('Date') . '</th>';
+        $header.='<th>' . $this->Translate('Time') . '</th>';
+        $header.='<th>' . $this->Translate('UserID') . '</th>';
+        $header.='<th>' . $this->Translate('First Name') . '</th>';
+        $header.='<th>' . $this->Translate('Last Name') . '</th>';
+        $header.='<th>' . $this->Translate('User Name') . '</th>';
+        $header.='<th>' . $this->Translate('Message') . '</th>';
+        $header.='</tr>';
+    
+        $data ='<tr align="center"><td>'.date("d.m.Y").'</td>';
+        $data.='<td>'.date("H:i").'</td>';
+        $data.='<td>'.$userid.'</td>';
+        $data.='<td>'.$first_name.'</td>';
+        $data.='<td>'.$last_name.'</td>';
+        $data.='<td>'.$user_name.'</td>';
+        $data.='<td>'.$message.'</td>';
+       
+        $buffer = explode("</tr>",$this->ReadAttributeString("Buffer"),$amount);
+        array_unshift($buffer, $data);
+        $buffer = array_slice( $buffer, 0, $amount );	
+        $string = implode("</tr>",$buffer);
+        $this->WriteAttributeString("Buffer",$string);
+
+        $this->SetValue('HTMLTable', $header . $string . "</table></body>");
     }
 }
