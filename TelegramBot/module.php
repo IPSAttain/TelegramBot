@@ -79,11 +79,11 @@ class TelegramBot extends WebHookModule
             $NameOrChatID = $this->NameToUserID($NameOrChatID);
 
             // Check formatting options of the message
-            if ($Text != strip_tags($Text)) {
+            //if ($Text != strip_tags($Text)) {
                 $parse_mode = 'HTML';
-            } else {
-                $parse_mode = '';
-            }
+            //} else {
+            //    $parse_mode = '';
+            //}
 
             // Send message
             $result = Longman\TelegramBot\Request::sendMessage([
