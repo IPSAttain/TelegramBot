@@ -156,7 +156,7 @@ class TelegramBot extends WebHookModule
         $recipients = json_decode($this->ReadPropertyString('AllowList'), true);
         $found = false;
         foreach ($recipients as $recipient) {
-            if ($recipient['UserID'] == $data['message']['from']['id']) {
+            if ($recipient['UserID'] == $data['message']['chat']['id']) {
                 $found = true;
                 break;
             }
